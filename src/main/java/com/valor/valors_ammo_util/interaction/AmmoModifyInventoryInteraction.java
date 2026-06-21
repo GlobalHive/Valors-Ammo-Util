@@ -23,6 +23,7 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.valor.valors_ammo_util.AmmoToStore;
 import com.valor.valors_ammo_util.ValorAmmoUtil;
 import com.valor.valors_ammo_util.component.LoadedAmmoComponent;
+import com.valor.valors_ammo_util.interaction.AmmoInfo;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -52,9 +53,6 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             return;
         }
 
-        ItemStack heldItem = interactionContext.getHeldItem();
-        assert heldItem != null;
-
         CommandBuffer<EntityStore> commandBuffer = interactionContext.getCommandBuffer();
         if (commandBuffer == null) {
             interactionContext.getState().state = InteractionState.Failed;
@@ -63,8 +61,7 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         Ref<EntityStore> playerEntity = interactionContext.getEntity();
 
         EntityStatMap statMap = interactionContext.getEntity().getStore().getComponent(interactionContext.getEntity(), EntityStatMap.getComponentType());
-        assert statMap != null;
-        EntityStatValue ammoStat = statMap.get(DefaultEntityStatTypes.getAmmo());
+        EntityStatValue ammoStat = statMap != null ? statMap.get(DefaultEntityStatTypes.getAmmo()) : null;
         double remainingAmmoCost = amountToRemove;
         double ammoUsed = 0;
 
@@ -77,6 +74,13 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             remainingAmmoCost = Math.min(remainingAmmoCost, ammoStat.getMax() - alreadyLoadedFromMetadata);
         }
 
+        if (remainingAmmoCost <= 0) {
+            if (autoSetAmmoStat && statMap != null) {
+                statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), alreadyLoadedFromMetadata);
+            }
+            return;
+        }
+
         // Check for ammo already loaded in the item
         AmmoToStore ammoToStore = new AmmoToStore();
         if (existingIds.length > 0 && existingQuantities.length > 0) {
@@ -84,7 +88,9 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         }
 
         if (ammoStat != null && ammoStat.getMax() > 0 && alreadyLoadedFromMetadata >= ammoStat.getMax()) {
+            if (statMap != null) {
                 statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), alreadyLoadedFromMetadata);
+            }
             return;
         }
 
@@ -107,7 +113,9 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         // Use up ammo
         for (short i : ammoFound) {
             ItemStack itemStack = inventory.getItemStack(i);
-            assert itemStack != null;
+            if (itemStack == null) {
+                continue;
+            }
             if (itemStack.getMaxDurability() > 0) {
                 if (itemStack.getDurability() < remainingAmmoCost) {
                     ammoToStore.addItem(itemStack.getItemId(), (int) itemStack.getDurability());
@@ -144,7 +152,7 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
             }
         }
 
-        if (autoSetAmmoStat) {
+        if (autoSetAmmoStat && statMap != null) {
             statMap.setStatValue(DefaultEntityStatTypes.getAmmo(), (float) ammoUsed + alreadyLoadedFromMetadata);
         }
 
@@ -157,7 +165,9 @@ public class AmmoModifyInventoryInteraction extends ModifyInventoryInteraction {
         }
         LoadedAmmoComponent nextLoadedAmmo = new LoadedAmmoComponent(
             AmmoToStore.listToArray(nextIds),
-            nextQty.stream().mapToInt(Integer::intValue).toArray()
+            nextQty.stream().mapToInt(Integer::intValue).toArray(),
+            itemAmmoInfoVar == null ? AmmoInfo.AMMO_INFO_VAR_ID : itemAmmoInfoVar,
+            useItemModel
         );
 
         if (loadedAmmoComponent == null) {

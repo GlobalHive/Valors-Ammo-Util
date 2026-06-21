@@ -7,7 +7,6 @@ import com.hypixel.hytale.protocol.InteractionState;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.server.core.entity.InteractionContext;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.CooldownHandler;
-import com.hypixel.hytale.server.core.modules.interaction.interaction.config.Interaction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.RootInteraction;
 import com.hypixel.hytale.server.core.modules.interaction.interaction.config.SimpleInstantInteraction;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -41,7 +40,7 @@ public class AmmoOnHit extends SimpleInstantInteraction {
     }
 
     static {
-        CODEC = BuilderCodec.builder(AmmoOnHit.class, AmmoOnHit::new, Interaction.ABSTRACT_CODEC)
+        CODEC = BuilderCodec.builder(AmmoOnHit.class, AmmoOnHit::new, SimpleInstantInteraction.CODEC)
                 .documentation("Applies Valor Ammo on hit effects")
                 .build();
     }

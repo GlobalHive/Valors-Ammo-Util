@@ -92,18 +92,13 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             Ref<EntityStore> projectile = ProjectileModule.get().spawnProjectile(generatedUUID, ref, commandBuffer, config, position, direction);
 
             // VAU Logic starts here
-            // Get ammo info from the held item metadata
-            ItemStack heldItem = context.getHeldItem();
-            if (heldItem == null) {
-                ValorAmmoUtil.LOGGER.atWarning().log("heldItem is null");
-                return;
-            }
-
             LoadedAmmoComponent loadedAmmoComponent = commandBuffer.getComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType());
             if (loadedAmmoComponent == null) {
                 return;
             }
 
+            String ammoInfoVar = loadedAmmoComponent.getAmmoInfoVar();
+            boolean useItemModel = loadedAmmoComponent.getUseItemModel();
             String[] itemIdsRaw = loadedAmmoComponent.getItemIds();
             int[] itemQuantitiesRaw = loadedAmmoComponent.getItemQuantities();
 
@@ -114,9 +109,11 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             }
 
             Item ammoItem = Item.getAssetMap().getAsset(ammoToUse.getItemId(0));
-            assert ammoItem != null;
+            if (ammoItem == null) {
+                return;
+            }
 
-            ValorAmmoPayload ammoPayload = ValorAmmoPayload.generateAmmoPayload(ammoItem, true, AmmoInfo.AMMO_INFO_VAR_ID);
+            ValorAmmoPayload ammoPayload = ValorAmmoPayload.generateAmmoPayload(ammoItem, useItemModel, ammoInfoVar);
 
             // Now remove 1 from the used item quantity and apply the change to the held item
             ammoToUse.useItem();
@@ -129,7 +126,9 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
             }
             LoadedAmmoComponent updatedLoadedAmmo = new LoadedAmmoComponent(
                     AmmoToStore.listToArray(nextIds),
-                    nextQty.stream().mapToInt(Integer::intValue).toArray()
+                    nextQty.stream().mapToInt(Integer::intValue).toArray(),
+                    ammoInfoVar,
+                    useItemModel
             );
             commandBuffer.replaceComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType(), updatedLoadedAmmo);
 

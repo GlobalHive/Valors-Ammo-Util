@@ -59,20 +59,26 @@ public class ValorAmmoPayload {
         String modelAsset = null;
         String onHit = null;
         String onMiss = null;
+        String ammoInfoId = null;
 
-        RootInteraction rootInteractionInfo = RootInteraction.getAssetMap().getAsset(item.getInteractionVars().get(itemAmmoInfoVar));
+        if (itemAmmoInfoVar != null && item.getInteractionVars() != null) {
+            ammoInfoId = item.getInteractionVars().get(itemAmmoInfoVar);
+        }
+
+        RootInteraction rootInteractionInfo = RootInteraction.getAssetMap().getAsset(ammoInfoId);
         if (rootInteractionInfo != null) {
             String[] interactionIds = rootInteractionInfo.getInteractionIds();
-            if (interactionIds.length == 0) ValorAmmoUtil.LOGGER.atWarning().log("No Interactions in Root Interaction of Interaction Var " + itemAmmoInfoVar);
-            ammoInfo = (AmmoInfo) Interaction.getAssetMap().getAsset(rootInteractionInfo.getInteractionIds()[0]);
-
-            if (ammoInfo != null) {
-                if (ammoInfo.getModelAssetId() != null) modelAsset = ammoInfo.getModelAssetId();
-                if (ammoInfo.getInteractionOnHitId() != null) onHit = ammoInfo.getInteractionOnHitId();
-                if (ammoInfo.getInteractionOnMissId() != null) onMiss = ammoInfo.getInteractionOnMissId();
+            if (interactionIds.length > 0) {
+                Interaction interaction = Interaction.getAssetMap().getAsset(interactionIds[0]);
+                if (interaction instanceof AmmoInfo) {
+                    ammoInfo = (AmmoInfo) interaction;
+                    if (ammoInfo.getModelAssetId() != null) modelAsset = ammoInfo.getModelAssetId();
+                    if (ammoInfo.getInteractionOnHitId() != null) onHit = ammoInfo.getInteractionOnHitId();
+                    if (ammoInfo.getInteractionOnMissId() != null) onMiss = ammoInfo.getInteractionOnMissId();
+                }
             }
         }
 
-        return new ValorAmmoPayload(item.getInteractionVars().get(itemAmmoInfoVar), item.getId(), modelAsset, onHit, onMiss, useItemModel);
+        return new ValorAmmoPayload(ammoInfoId, item.getId(), modelAsset, onHit, onMiss, useItemModel);
     }
 }

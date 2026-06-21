@@ -93,7 +93,7 @@ public class AmmoUnloadInteraction extends SimpleInstantInteraction {
     }
 
     static {
-        CODEC = BuilderCodec.builder(AmmoUnloadInteraction.class, AmmoUnloadInteraction::new, AmmoUnloadInteraction.CODEC)
+        CODEC = BuilderCodec.builder(AmmoUnloadInteraction.class, AmmoUnloadInteraction::new, SimpleInstantInteraction.CODEC)
                 .documentation("Ammo Unload will return all ammo currently stored in the loadable item")
                 .build();
     }
