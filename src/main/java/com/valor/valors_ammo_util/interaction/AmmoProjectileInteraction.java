@@ -89,7 +89,8 @@ public class AmmoProjectileInteraction extends SimpleInstantInteraction implemen
                 generatedUUID = null;
             }
 
-            Ref<EntityStore> projectile = ProjectileModule.get().spawnProjectile(generatedUUID, ref, commandBuffer, config, position, direction);
+            Ref<EntityStore> projectile = ProjectileModule.get().spawnProjectile(generatedUUID, null, ref, commandBuffer, config, position, direction);
+            
 
             // VAU Logic starts here
             LoadedAmmoComponent loadedAmmoComponent = commandBuffer.getComponent(ref, ValorAmmoUtil.getLoadedAmmoComponentType());
